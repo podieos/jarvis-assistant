@@ -1,4 +1,4 @@
-# jarvis-assistant
+# Jarvis assistant
 
 Voice assistants modelled after JARVIS, in two flavors: OpenAI and Google Gemini.
 
