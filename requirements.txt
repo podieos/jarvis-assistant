@@ -1,0 +1,15 @@
+# Shared
+numpy
+openwakeword
+
+# OpenAI versions
+openai
+sounddevice
+websocket-client
+certifi
+
+# Google (Gemini Live) version
+google-genai
+pyaudio
+opencv-python
+requests
