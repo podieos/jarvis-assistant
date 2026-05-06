@@ -20,7 +20,7 @@ load_dotenv()
 CLIENT = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]
 MODEL = "gemini-3.1-flash-live-preview"
-VOICE = "Charon"
+VOICE = "Achird"
 
 WAKE_WORD_MODEL = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
 WAKE_WORD_THRESHOLD = 0.6
@@ -109,7 +109,7 @@ def build_config():
         - The user is located in Prague, Czech Republic
         - Use Celsius for temperature, metric for distances
         - When using tools, briefly acknowledge it ("Checking the weather, Sir.")
-        - When the conversation naturally concludes — such as the user saying goodbye, thanking you, or indicating they're done — call the end_conversation tool
+        - Only call end_conversation if the user explicitly that is all. Never call it just because the topic changed or there's a pause.
         - Prefer specific tools (get_weather, get_time, etc.) over google_search when they apply
     """
     if os.path.exists("memories.jsonl"):
@@ -144,12 +144,12 @@ def build_config():
         session_resumption=types.SessionResumptionConfig(
             handle=session_handle  # None = fresh session
         ),
-        # MEDIA_RESOLUTION_LOW → cheaper | MEDIA_RESOLUTION_MEDIUM → default | MEDIA_RESOLUTION_HIGH → fine text
-        media_resolution=types.MediaResolution.MEDIA_RESOLUTION_MEDIUM,
         # compresses old history so session never dies from the 15min/2min context limit
         context_window_compression=types.ContextWindowCompressionConfig(
             sliding_window=types.SlidingWindow(),
         ),
+        # MEDIA_RESOLUTION_LOW → cheaper | MEDIA_RESOLUTION_MEDIUM → default | MEDIA_RESOLUTION_HIGH → fine text
+        media_resolution=types.MediaResolution.MEDIA_RESOLUTION_MEDIUM,
         realtime_input_config=types.RealtimeInputConfig(
             # TURN_INCLUDES_ONLY_ACTIVITY → video only while speaking (cheaper x5 time) | TURN_INCLUDES_AUDIO_ACTIVITY_AND_ALL_VIDEO → continuous vision (expensive)
             turn_coverage=types.TurnCoverage.TURN_INCLUDES_ONLY_ACTIVITY,
@@ -240,7 +240,7 @@ async def send_audio(session, mic, stop_event, turn_lock):
             )
         except Exception as e:
             print(f"Audio send error: {e}")
-            break
+            continue
     try:
         await session.send_realtime_input(audio_stream_end=True)
     except Exception:
@@ -337,7 +337,7 @@ async def receive_responses(session, speaker, stop_event, turn_lock):
                     print("Done")
                     break
     finally:
-        if turn.get("input") or turn.get("output"):
+        if turn and (turn.get("input") or turn.get("output")) and not stop_event.is_set():
             turn["error"] = True
             log_turn(turn)
 
