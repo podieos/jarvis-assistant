@@ -1,0 +1,7 @@
+google-genai
+pyaudio
+numpy
+openwakeword
+opencv-python
+requests
+python-dotenv

@@ -1,0 +1,6 @@
+openai
+sounddevice
+numpy
+openwakeword
+websocket-client
+certifi
