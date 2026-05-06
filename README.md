@@ -1,6 +1,6 @@
 # jarvis-assistant
 
-Voice assistants modelled after JARVIS, in two flavors: OpenAI and Google Gemini.
+Wakeword-triggered voice assistant built on the Gemini Live API and OpenAI Realtime API. Uses openWakeWord for always-on detection, streams bidirectional PCM audio, and supports tool calling (weather, time, memory), webcam video input, and session resumption.
 
 ## Layout
 
