@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# set once in terminal: echo 'export GEMINI_API_KEY="your_key_here"' >> ~/.zshrc && source ~/.zshrc
-# set once in terminal: echo 'export OPENWEATHER_API_KEY="your_key_here"' >> ~/.zshrc && source ~/.zshrc
+# echo 'export GEMINI_API_KEY="your_key_here"' >> ~/.zshrc && source ~/.zshrc
+# echo 'export OPENWEATHER_API_KEY="your_key_here"' >> ~/.zshrc && source ~/.zshrc
 CLIENT = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]
 MODEL = "gemini-3.1-flash-live-preview"
@@ -135,11 +135,11 @@ def build_config():
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=VOICE)
             )
         ),
-        # "minimal" → fastest | "low" → better facts | "medium" → complex | "high" → deepest, slowest
+        # "minimal" -> fastest | "low" -> better facts | "medium" -> complex | "high" -> deepest, slowest
         thinking_config=types.ThinkingConfig(
             thinking_level="minimal",
         ),
-        # passes saved handle on reconnect so model remembers full history — valid for 2hr
+        # passes saved handle on reconnect so model remembers full history  (valid for 2hr)
         session_resumption=types.SessionResumptionConfig(
             handle=session_handle  # None = fresh session
         ),
@@ -149,15 +149,15 @@ def build_config():
         ),
         realtime_input_config=types.RealtimeInputConfig(
             turn_coverage=types.TurnCoverage.TURN_INCLUDES_ALL_INPUT,
-            # NO_INTERRUPTION → model finishes before processing new input (prevents self-hearing)
-            # INTERRUPTION    → user can barge in at any time
+            # NO_INTERRUPTION -> model finishes before processing new input (prevents self-hearing)
+            # INTERRUPTION    -> user can barge in at any time
             activity_handling=types.ActivityHandling.NO_INTERRUPTION,
             automatic_activity_detection=types.AutomaticActivityDetection(
-                # HIGH → triggers easily | LOW → needs clear voice, fewer false triggers
+                # HIGH -> triggers easily | LOW -> needs clear voice, fewer false triggers
                 start_of_speech_sensitivity=types.StartSensitivity.START_SENSITIVITY_LOW,
-                # HIGH → cuts off quickly | LOW → waits longer, allows mid-sentence pauses
+                # HIGH -> cuts off quickly | LOW -> waits longer, allows mid-sentence pauses
                 end_of_speech_sensitivity=types.EndSensitivity.END_SENSITIVITY_LOW,
-                prefix_padding_ms=200,    # ms before speech start — increase if first word gets clipped
+                prefix_padding_ms=200,    # ms before speech start - increase if first word gets clipped
                 silence_duration_ms=1000,  # ms of silence to end turn — increase if model cuts you off
             ),
         ),
