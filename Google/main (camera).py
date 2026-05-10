@@ -233,6 +233,7 @@ async def send_audio(session, mic, stop_event, turn_lock):
         except Exception:
             continue
         if turn_lock.locked():
+            await asyncio.sleep(0.02)
             continue
         try:
             await session.send_realtime_input(
@@ -256,9 +257,13 @@ async def run_tool(session, function, pending_tool_calls, stop_event):
     if function.id not in pending_tool_calls:
         return
     pending_tool_calls.pop(function.id, None)
-    await session.send_tool_response(function_responses=[
-        types.FunctionResponse(id=function.id, name=function.name, response={"result": result})
-    ])
+    try:
+        await session.send_tool_response(function_responses=[
+            types.FunctionResponse(id=function.id, name=function.name, response={"result": result})
+        ])
+    except Exception as e:
+        print(f"Tool response error: {e}")
+        return
     if function.name == "end_conversation":
         print("Stop")
         stop_event.set()
@@ -266,11 +271,12 @@ async def run_tool(session, function, pending_tool_calls, stop_event):
 
 async def receive_responses(session, speaker, stop_event, turn_lock):
     global session_handle
+    turn = None
+    pending_tool_calls = {}
 
     try:
         while True:
             turn = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "input": "", "thought": "", "output": "", "tokens": 0, "modality": {}}
-            pending_tool_calls = {}
             responding = False
             print("Listening")
             async for response in session.receive():
@@ -337,9 +343,13 @@ async def receive_responses(session, speaker, stop_event, turn_lock):
                     print("Done")
                     break
     finally:
-        if turn and (turn.get("input") or turn.get("output")) and not stop_event.is_set():
-            turn["error"] = True
-            log_turn(turn)
+            for task in pending_tool_calls.values():
+                task.cancel()
+            if pending_tool_calls:
+                await asyncio.gather(*pending_tool_calls.values(), return_exceptions=True)
+            if turn and (turn.get("input") or turn.get("output")) and not stop_event.is_set():
+                turn["error"] = True
+                log_turn(turn)
 
 
 async def send_video(session, cap, stop_event):
@@ -391,10 +401,9 @@ async def main():
             except Exception as e:
                 print(f"Session error: {e}, reconnecting...")
                     
-    except* asyncio.CancelledError:
-        pass
-    except* Exception as error:
-        traceback.print_exception(error)
+    except Exception as e:
+        print(f"Fatal error: {e}")
+        traceback.print_exc()
     finally:
         mic.stop_stream()
         mic.close()
